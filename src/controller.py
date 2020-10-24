@@ -24,9 +24,13 @@ class Controller:
                 raise ValueError
 
             temp.seek(0)
-            video_formats = [s.strip().split() for s in temp.readlines()[4:] if s.find("audio only") == -1]
-            temp.seek(0)
-            audio_formats = [s.replace("audio only", "").strip().split() for s in temp.readlines()[4:] if s.find("audio only") != -1]
+            response = temp.readlines()
+
+            while (line := response.pop(0)).find("format code") == -1:
+                pass
+
+            video_formats = [s.strip().split() for s in response if s.find("audio only") == -1]
+            audio_formats = [s.replace("audio only", "").strip().split() for s in response if s.find("audio only") != -1]
       
 
             self.audio_formats = [ft.Format(int(a[0]), ft.AudioExtension[a[1].upper()], int(a[3].replace("k", ""))) for a in audio_formats]

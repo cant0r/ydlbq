@@ -22,8 +22,9 @@ def main():
         _controller = controller.Controller(args[1])
         print(_controller.get_command_for_best_quality())
 
-    except ValueError:
+    except ValueError as ve:
         print(f"Malformed URL or the domain is not {YOUTUBE_CNAME}!")
+        print(ve)
         usage()
         return -2
 
