@@ -1,7 +1,7 @@
 # ydlbq
 #### Előállítja azt a parancsot amivel a lehető legjobb minőségben tudjuk letölteni az adott YouTube videót `youtube-dl` segítségével.
 
-![h.gif](docs/demo.gif)   
+
 
 ### Futtatás
 
@@ -26,6 +26,6 @@ Nálam ennek egy elég régi 2020.09.20-as változata van telepítve ami elég g
 
 Például:
 
-![h.png](docs/youtube-dl_bug_BE_ADVISED.png)
+![h.png](docs/images/youtube-dl_bug_BE_ADVISED.png)
 
 ## **A megoldás ez esetben a szkript újrafuttatása!**

@@ -75,9 +75,14 @@ A `_parse_format_table` lekéri a paraméterként átadott URL-hez tartozó elé
                 raise ValueError
 
             temp.seek(0)
-            video_formats = [s.strip().split() for s in temp.readlines()[4:] if s.find("audio only") == -1]
-            temp.seek(0)
-            audio_formats = [s.replace("audio only", "").strip().split() for s in temp.readlines()[4:] if s.find("audio only") != -1]
+            response = temp.readlines()
+
+            while (line := response.pop(0)).find("format code") == -1:
+                pass
+
+            video_formats = [s.strip().split() for s in response if s.find("audio only") == -1]
+            audio_formats = [s.replace("audio only", "").strip().split() for s in response if s.find("audio only") != -1]
+      
 ```
 A konstruktorban látott módszer alapján megint kommunikálunk a _youtube-dl_ programmal, lekérjük az adott URL által mutatott videóhoz elérhető formátumokat.   
 
