@@ -8,6 +8,9 @@ YDL_COMMAND_PARTIAL = "youtube-dl -f "
 
 class Controller:
     def __init__(self, URL):
+        with tf.TemporaryFile("w+") as t:
+            if sp.run(["youtube-dl", "--version"], stdout=t).returncode != 0:
+                  raise Exception("Please install youtube-dl on your system!")
         self.audio_formats = []
         self.video_formats = []
         self.URL = URL
