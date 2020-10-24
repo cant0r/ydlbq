@@ -18,6 +18,7 @@ class Controller:
         self._parse_format_table()        
 
     def _parse_format_table(self):
+        """Creates audio and video list that holds all the appropriate Format instances"""
         with tf.TemporaryFile(mode="w+", encoding="utf-8", buffering=1) as temp, tf.TemporaryFile(mode="w+") as error:
             sp.run(["youtube-dl", "-F", f"{self.URL}"], stdout=temp, stderr=error)
             if len(error.read()) > 1:
@@ -38,6 +39,7 @@ class Controller:
            
 
     def get_command_for_best_quality(self):
+        """Returns with the command that download the given video in its best quality via youtube-dl"""
         video_format = sorted(self.video_formats, key=lambda f: f.resolution).pop()
         audio_format = None
         if video_format.extension == ft.VideoExtension.WEBM:

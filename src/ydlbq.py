@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 YOUTUBE_CNAME = "youtube.com"
 
 def usage():
+    """Prints how to use the script to stdout"""
     print("Usage: ./ydlbq.py <URL>")
 
 def main():
