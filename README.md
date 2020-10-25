@@ -1,5 +1,5 @@
 # ydlbq
-#### Generates a **youtube-dl** command that downloads a given YouTube video in its best quality, hence the name `youtube-dl best quality == ydlbq`
+#### Generates a **youtube-dl** command that downloads a given YouTube video in its best quality, hence the name `ydlbq == youtube-dl best quality`
 
 
 
