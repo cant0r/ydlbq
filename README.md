@@ -1,9 +1,9 @@
 # ydlbq
-#### Előállítja azt a parancsot amivel a lehető legjobb minőségben tudjuk letölteni az adott YouTube videót `youtube-dl` segítségével.
+#### Generates a **youtube-dl** command that downloads a given YouTube video in its best quality, hence the name `youtube-dl best quality == ydlbq`
 
 
 
-### Futtatás
+### Usage
 
 ```bash
 cd src
@@ -11,24 +11,22 @@ chmod u+x ydlbq.py
 ./ydlbq <URL>
 ```    
 
-Vagy konkrétan egy példán keresztül:    
-_**Arch Linux**-on nekem a `python` a 3.x-re mutat :)_
+Or you can just run it via calling the interpreter explicitly:    
 
 ```bash
 python ydlbq.py https://www.youtube.com/watch?v=4PBqpX0_UOc
 ```
 
-### Szemléltetők: [whoa.md](docs/tests.md)
+### Some examples: [tests.md](docs/tests.md)
 
 
-### __FONTOS__   
+### __IMPORTANT__   
 
-**Megszűntették a youtube-dl GitHub oldalát!!** így most egy ideig nem fognak bugfixek készülni a `youtube-dl` programhoz.
+**The repository for the `youtube-dl` project is currently under lockdown!!** This means we won't receive any new updates for a while, and I'm currently facing some periodic communication anomalies with the servers of **youtube.com** that cause `youtube-dl` to fail which makes my script fail.   
 
-Nálam ennek egy elég régi 2020.09.20-as változata van telepítve ami elég gyakran nem tud kommunikálni __youtube.com__ szervereivel, így a szkript is elhassal!
 
-Például:
+E.q:
 
 ![h.png](docs/images/youtube-dl_bug_BE_ADVISED.png)
 
-## **A megoldás ez esetben a szkript újrafuttatása!**
+## **To circumvent this anomaly one must run the script multiple times**
