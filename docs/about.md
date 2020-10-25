@@ -60,7 +60,7 @@ Checking is done by using the `subprocess` module:
 1. We call its `run` method by redirecting its `stdout` parameter to `subprocess.PIPE` so the script can catch the output of `youtube-dl`
 2. If the returncode is different from 0 then the script couldn't find the `youtube-dl` program on the PATH ( or an exception or error happened) so the script throws a `ValueError`
 
-Finally, we call the _"privat"_ `_parse_format_table` method of the _Controller_:
+Finally, we call the _"private"_ `_parse_format_table` method of the _Controller_:
 
 ```python
  def _parse_format_table(self):
@@ -169,7 +169,7 @@ I explicitly handle the _IBM_ case because the script can only mix _IBM_ audio a
 ---
 
 ### **formatable.py** module
-A szkript által használt modellt a `formatable` modul írja le:
+The used model is described by the formattable module:
 ```python
 class Format:
     def __init__(self, format_code, extension, resolution, is_video=True, encoding="", size="",sample_rate=0, sample_size=0, fps=0):
