@@ -1,8 +1,8 @@
-# ydlbq dokumentáció
+# ydlbq documentation
 
 
-### **ydlbq.py** szkript
-A szkript futása a paraméterként átadott URL cím ellenőrzésével kezdődik.    
+### **ydlbq.py** script
+Before the script downloads the given video, first, the script checks if it's a valid YouTube URL or not.  
 ```python
 def usage():
     print("Usage: ./ydlbq.py <URL>")
@@ -28,107 +28,177 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-AZ ellenőrzések nagyon egyszerűek, a következőkre figyelünk:
-* Lett-e átadva paraméter?
-* Az átadott paraméter valid URL?
-    * Ezt az `urllib` modul segítségével ellenőrizzük, ha sikerül _parse_-olni akkor valid.
-* Megnézzük, hogy szerepel-e benne a "youtube.com" domain.
-* Mivel a _youtube_dl_ is jelenthet hibáról, a `try` blokkban kommunikálunk vele.  
+The validation is really simple, the script checks for the following things:
+* Has a parameter been given?
+* Is the given paramter a valid URL?
+    * the script can assert this by using `urllib` module, if the script can parse it via `urlparse` then it's valid.
+* Does the URL contain "youtube.com"? -- This test is actually Iak.
+* Since _youtube-dl_ does some checks and can throw exceptions as Ill, the script interfaces with it inside the `try` block
 
 ---
 
 
-### **controller.py** modul    
-A _ydlbq_ szkript az ebben a modulban található _Controller_ osztály segítségével kommunikál a rendszerünkre feltelepített __youtube-dl__ programmmal.  
+### **controller.py** module   
+The _ydlbq_ script communicates with our installed __youtube-dl__ program via the _Controller_ class.  
 
-Az osztály példányosításakor a következők hajtódnak végre:    
+During the instantiation of the _Controller_ class the following happens:    
 ```python
 class Controller:
-    def __init__(self, URL):
-        with tf.TemporaryFile("w+") as t:
-            if sp.run(["youtube-dl", "--version"], stdout=t).returncode != 0:
-                  raise Exception("Please install youtube-dl on your system!")
-        self.audio_formats = []
-        self.video_formats = []
+    def __init__(self, URL):  
+        response = sp.run(["youtube-dl", "--version"], stdout=sp.PIPE)
+        if response.returncode != 0:
+            raise ValueError
+
+        self.formats = []
         self.URL = URL
 
-        self._parse_format_table()   
+        self._parse_format_table()  
 ```   
-Amikor meghívódik a konstruktor akkor ellenőrizzük, hogy telepítve van-e, azaz, rajta van-e a _PATH_ változón a **youtube-dl** fájlhoz vezető út.   
-Amennyiben nincs, akkor kivételt dobunk a felhasználó felé, hogy nem találtuk és telepítse fel (szabályosan).
+First, the script checks if `youtube-dl` is even installed on the system(can the script reach it via the PATH environment variable). If the script hasn't found the executable then the script raises an Exception telling the user to install the program correctly.
 
-Az ellenőrzést a `subprocess` modul segítségével végezzük el:
-1. Létrehozunk egy _temporary_ fájlt, ami csak addig `with` hatókörében fog csak létezni
-2. A `subprocess` modul `run` függvényvét meghívjuk, úgy, hogy ebbe az átmeneti fájlba írjon és ne a standard kimenetre (ez csupán esztétika okokból tesszük)
-3. Ha a `run` által visszatérített _CompletedProcess_ típusú objektum által hordozott visszatérési érték 0-tól különbözik akkor nem találtuk meg a _youtube-dl_ fájlt.
+Checking is done by using the `subprocess` module:
+1. We call its `run` method by redirecting its `stdout` parameter to `subprocess.PIPE` so the script can catch the output of `youtube-dl`
+2. If the returncode is different from 0 then the script couldn't find the `youtube-dl` program on the PATH ( or an exception or error happened) so the script throws a `ValueError`
 
-A konstruktor maradék részében inicialzálunk néhány tagváltozót és meghívjuk a `_parse_format_table` "privát" tagmetódust.
-
-
-A `_parse_format_table` lekéri a paraméterként átadott URL-hez tartozó elérhető audió és videó formátumokat a _youtube-dl_ programtól, majd feldolgozza őket `Format` típusú objektumokba.
+Finally, we call the _"privat"_ `_parse_format_table` method of the _Controller_:
 
 ```python
  def _parse_format_table(self):
-        with tf.TemporaryFile(mode="w+", encoding="utf-8", buffering=1) as temp, tf.TemporaryFile(mode="w+") as error:
-            sp.run(["youtube-dl", "-F", f"{self.URL}"], stdout=temp, stderr=error)
-            if len(error.read()) > 1:
-                raise ValueError
+    response = sp.run(["youtube-dl", "-F", f"{self.URL}"], stdout=sp.PIPE)
+    if response.returncode != 0:
+        raise ValueError
 
-            temp.seek(0)
-            response = temp.readlines()
-
-            while (line := response.pop(0)).find("format code") == -1:
-                pass
-
-            video_formats = [s.strip().split() for s in response if s.find("audio only") == -1]
-            audio_formats = [s.replace("audio only", "").strip().split() for s in response if s.find("audio only") != -1]
+    response = response.stdout.decode("utf-8").splitlines()
+    response = self.normalize(response)
       
 ```
-A konstruktorban látott módszer alapján megint kommunikálunk a _youtube-dl_ programmal, lekérjük az adott URL által mutatott videóhoz elérhető formátumokat.   
+First, the script requests `youtube-dl` to acquire all the available formats for the given video.
 
-Miután az eredményt kiírtuk egy fájlba, elkezdjük feldolgozni azt soronként, a memóriába közvetlenül beolvassuk a fájlt, mivel kicsi lábnyommal rendelkezik. 
+After the script loads the downloaded data into memory the script normalizes it.
 
-A feldolgozás során _list comprehension_ módszert alkalmazva feldaraboljuk az egyes formátumokat leíró sorokat, kihagyva az első releváns információt nem hordozó 4 sort.    
+```python
+def normalize(self, format_table):
+        ft = []
+        for s in format_table:
+            line = s.replace("m4a_dash container,", "")
+            line = line.replace("Ibm container,", "")
+            line = line.replace("audio only", "audio-only")
+
+            ft.append(line)
+
+        while (line := ft.pop(0)).find("format code") == -1:
+            pass
+        
+        return ft
+```
+
+Here normalization means that the script removes certain unnecessary information from each line so that the script can split up the line equally regardless what format it describes.
+
+Let's look at the actual __*"parsing"*__:
 ```python      
+for line in response:
+    dummy = ft.Format(0,0,0)
+    l = line.strip().split(maxsplit=4)
+    dummy.format_code = l[0]
+    extension = l[1].upper()
+    dummy.extension = ft.Extension[extension if extension != "3GP" else "_3GP"]
+    res = l[3]
+    if res.find("p") != -1:
+        expanded_res = sum([int(p.replace('', '0')) for p in res.split('p')])
+        dummy.resolution = expanded_res
+    else:
+        dummy.resolution = 0
+        dummy.is_video = False
+            
+    note = l[4].split(',')
+    dummy.size = note[-1]
+    if not dummy.is_video:
+        dummy.encoding, dummy.sample_size, dummy.sample_rate = self.get_audio_encoding(note[1])
+    else:
+        dummy.encoding = note[1].strip()
+        dummy.fps = int(note[2].replace("fps", "").strip())
+        if note[3].strip() != "video only":
+            dummy.encoding, dummy.sample_size, dummy.sample_rate = self.get_audio_encoding(note[3])
 
-            self.audio_formats = [ft.Format(int(a[0]), ft.AudioExtension[a[1].upper()], int(a[3].replace("k", ""))) for a in audio_formats]
-            self.video_formats = [ft.Format(int(v[0]), ft.VideoExtension[v[1].upper() if v[1] != "3gp" else "_3GP"], sum([int(s) for s in [num.replace("", "0") for num in v[3].split("p")]])) for v in video_formats]
-      
+    self.formats.append(dummy)     
 ```
-A metódus legvégén történik meg a tényleges feldolgozás, amikor az előbb elkészített listák alapján létrehozzuk az elérhető formátumokat reprezentáló `Format` típusú objektumokkal rendelkező audió és videó listákat.
+After normalization the script iterates over each line in `response` and the script extracts the wanted properties into a dummy `Format` object.
+Since the script cannot reasonably split up the lines(e.q see the **note** column) further splitting required.
+The problematic part describes the audio format therefore the script handles this anomaly in `get_audio_information`.
 
-Az adott formátumnak megfelelően végrehajtjuk a megfelelő módosításokat, hogy tárolni tudjuk `Format` típusú objektumokban.
+```python
+def get_audio_encoding(self, s):
+    audio_encoding_info = s.split('@')
+    sample = audio_encoding_info[1].split('k')
+    encoding = audio_encoding_info[0].strip()
+    size = int(sample[0].strip())
+    raw_rate = sample[1].strip()
+    rate =  int(raw_rate[1:raw_rate.find(')')].replace('Hz',''))
+    return encoding,size,rate
+```
+Finally, the script produces the wanted _youtube-dl_ command inside the `get_command_for_best_quality` method:
+```python
+def get_command_for_best_quality(self):
+    """Returns with the command that download the given video in its best quality via youtube-dl"""
+    video_formats = [x for x in self.formats if x.is_video]
+    video_format = sorted(video_formats, key=lambda f: f.resolution)
+    video_format = video_format.pop()
 
+    audio_formats = [x for x in self.formats if not x.is_video]
+    audio_format = sorted(audio_formats, key=lambda f: f.resolution)
+        
+    if video_format.extension == ft.Extension.IBM:
+        for a in audio_format:
+            if a.extension != ft.Extension.IBM:
+                audio_format.remove(a)
+    else:
+        for a in audio_format:
+            if a.extension == ft.Extension.IBM:
+                audio_format.remove(a)
+
+    audio_format = audio_format.pop()
+
+    vf_code = str(video_format.format_code)
+    af_code = str(audio_format.format_code)
+    YDL_COMMAND_PARAMETERS = [vf_code, "+",af_code, " ", self.URL]
+    return "".join([YDL_COMMAND_PARTIAL] + YDL_COMMAND_PARAMETERS)
+
+```
+
+I explicitly handle the _IBM_ case because the script can only mix _IBM_ audio and _IBM_ video together with `youtube-dl`.
 ---
 
-### **formatable.py** modul
+### **formatable.py** module
 A szkript által használt modellt a `formatable` modul írja le:
 ```python
 class Format:
-    def __init__(self, format_code, extension, resolution):
+    def __init__(self, format_code, extension, resolution, is_video=True, encoding="", size="",sample_rate=0, sample_size=0, fps=0):
         self.format_code = format_code
         self.extension = extension
         self.resolution = resolution
-        
+        self.is_video = is_video
+        self.encoding = encoding
+        self.size = size
+        self.sample_rate = sample_rate
+        self.sample_size = sample_size
+        self.fps = fps     
 ```
-A `Format` osztály konstruktora egy szimpla hozzárendelő konstruktor, innen is látható, hogy a `Format` osztály csak egy egyszerű _data class_.     
+The `Format` type desribes the available audio and video formats. This' just a simple _data class_.
+
 ```python
 from enum import Enum
 
-class AudioExtension(Enum):
+class Extension(Enum):
     AAC  = 0
     WAV  = 1
     M4A  = 2
     MP3  = 3
     WEBM = 4
     OGG  = 5
-    
-class VideoExtension(Enum):
-    _3GP = 0
-    FLV  = 1
-    WEBM = 2
-    MP4  = 3
+    _3GP = 6
+    FLV  = 7
+    MP4  = 8
 ```
-Megkülönböztetjük az audió és videó formátumokat _enum_-ok használatával.    
-A `youtube-dl` áltla támogatott összes formátum fel van sorolva itt, forrás `man youtube-dl`.  
+Also, because all the possible formats are determined in `youtube-dl` the script stores them as enums.
+Please run `man youtube-dl` for further information regarding the formats and etc. 
 
