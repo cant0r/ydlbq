@@ -22,7 +22,9 @@ python ydlbq.py https://www.youtube.com/watch?v=4PBqpX0_UOc
 
 ### __IMPORTANT__   
 **UPDATE:** THE [YOUTUBE-DL PROJECT](https://github.com/ytdl-org/youtube-dl) IS BACK!      
-Now the community can continue to do bugfixes, implement new features and etc. and soon the problem mentioned below will be a thing of the past.
+Now the community can continue to do bugfixes, implement new features and etc. and soon the problem mentioned below will be a thing of the past.       
+
+
 ~~**The repository for the `youtube-dl` project is currently under lockdown!!** This means we won't receive any new updates for a while, and I'm currently facing some periodic communication anomalies with the servers of **youtube.com** that cause `youtube-dl` to fail which makes my script fail.~~
 
 
